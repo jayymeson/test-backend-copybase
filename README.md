@@ -1,0 +1,1 @@
+para criar construir as imagens e volumes docker: sudo docker-compose up --build para linux. Para windows: docker-compose up --build

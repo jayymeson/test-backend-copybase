@@ -1,0 +1,28 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.0.x", "linux-musl-openssl-3.0.x"]
+}
+
+model Subscriptions {
+  id                  String   @id @default(uuid())
+  periodicity         String
+  charge_count        Int
+  charge_frequency_days Int
+  start_date          DateTime
+  status              String
+  status_date         DateTime
+  cancellation_date   DateTime?
+  amount              Float
+  next_cycle_date     DateTime?
+  subscriber_id       String
+
+  @@map("Subscriptions")
+}
