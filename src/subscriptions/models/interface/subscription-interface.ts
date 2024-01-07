@@ -1,13 +1,13 @@
 export interface Subscription {
   id: string;
   periodicity: string;
-  charge_count: number;
-  charge_frequency_days: number;
-  start_date: Date;
+  chargeCount: number;
+  chargeFrequencyDays: number;
+  startDate: Date;
   status: string;
-  status_date: Date;
-  cancellation_date?: Date;
+  statusDate: Date;
+  cancellationDate?: Date;
   amount: number;
-  next_cycle_date: Date;
-  subscriber_id: string;
+  nextCycleDate: Date;
+  subscriberId: string;
 }

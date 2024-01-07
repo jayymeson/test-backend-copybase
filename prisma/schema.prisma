@@ -14,15 +14,16 @@ generator client {
 model Subscriptions {
   id                  String   @id @default(uuid())
   periodicity         String
-  charge_count        Int
-  charge_frequency_days Int
-  start_date          DateTime
+  chargeCount         Int      @map("charge_count")
+  chargeFrequencyDays Int      @map("charge_frequency_days")
+  startDate           DateTime @map("start_date")
   status              String
-  status_date         DateTime
-  cancellation_date   DateTime?
+  statusDate          DateTime @map("status_date")
+  cancellationDate    DateTime? @map("cancellation_date")
   amount              Float
-  next_cycle_date     DateTime?
-  subscriber_id       String
+  nextCycleDate       DateTime? @map("next_cycle_date")
+  subscriberId        String   @map("subscriber_id")
 
   @@map("Subscriptions")
 }
+

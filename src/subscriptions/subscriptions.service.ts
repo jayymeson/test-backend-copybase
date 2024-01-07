@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as XLSX from 'xlsx';
 import { Subscription } from './models/interface/subscription-interface';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SubscriptionsService {
@@ -23,18 +23,32 @@ export class SubscriptionsService {
     let ignoredCount = 0;
 
     for (const subscription of subscriptions) {
+      // Mapeia os campos para o formato esperado pelo Prisma
+      const prismaData = {
+        periodicity: subscription.periodicity,
+        charge_count: subscription.chargeCount,
+        charge_frequency_days: subscription.chargeFrequencyDays,
+        start_date: subscription.startDate,
+        status: subscription.status,
+        status_date: subscription.statusDate,
+        cancellation_date: subscription.cancellationDate,
+        amount: subscription.amount,
+        next_cycle_date: subscription.nextCycleDate,
+        subscriber_id: subscription.subscriberId,
+      };
+
       // Verifica se já existe um registro com o mesmo subscriber_id, start_date e amount
       const existingSubscription = await this.prisma.subscriptions.findFirst({
         where: {
-          subscriber_id: subscription.subscriber_id,
-          start_date: subscription.start_date,
-          amount: subscription.amount,
+          subscriber_id: prismaData.subscriber_id,
+          start_date: prismaData.start_date,
+          amount: prismaData.amount,
         },
       });
 
       // Se não existir, insere o novo registro
       if (!existingSubscription) {
-        await this.prisma.subscriptions.create({ data: subscription });
+        await this.prisma.subscriptions.create({ data: prismaData });
         insertedCount++;
       } else {
         ignoredCount++;
@@ -81,26 +95,26 @@ export class SubscriptionsService {
       return {
         id: item.id || undefined,
         periodicity: item.periodicidade,
-        charge_count: item['quantidade cobranças']
+        chargeCount: item['quantidade cobranças']
           ? Number(item['quantidade cobranças'])
           : 0,
-        charge_frequency_days: item['cobrada a cada X dias']
+        chargeFrequencyDays: item['cobrada a cada X dias']
           ? Number(item['cobrada a cada X dias'])
           : 0,
-        start_date: item['data início']
+        startDate: item['data início']
           ? new Date(item['data início'])
           : new Date(),
         status: item.status,
-        status_date: item['data status']
+        statusDate: item['data status']
           ? new Date(item['data status'])
           : new Date(),
-        cancellation_date:
+        cancellationDate:
           item['data cancelamento'] && item['data cancelamento'] !== '0'
             ? new Date(item['data cancelamento'])
             : null,
         amount: item.valor ? Number(item.valor) : 0,
-        next_cycle_date: validNextCycleDate,
-        subscriber_id: item['ID assinante'],
+        nextCycleDate: validNextCycleDate,
+        subscriberId: item['ID assinante'],
       };
     });
   }
