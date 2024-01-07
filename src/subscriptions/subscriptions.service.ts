@@ -9,7 +9,7 @@ export class SubscriptionsService {
 
   async processUploadedFile(
     file: Express.Multer.File,
-  ): Promise<Subscription[]> {
+  ): Promise<{ inserted: number; ignored: number }> {
     const data = this.extractDataFromFile(file);
 
     // Inserir dados no banco de dados
@@ -18,26 +18,30 @@ export class SubscriptionsService {
 
   private async insertSubscriptions(
     subscriptions: Subscription[],
-  ): Promise<Subscription[]> {
-    const insertedSubscriptions: Subscription[] = [];
+  ): Promise<{ inserted: number; ignored: number }> {
+    let insertedCount = 0;
+    let ignoredCount = 0;
 
     for (const subscription of subscriptions) {
+      // Verifica se já existe um registro com o mesmo subscriber_id, start_date e amount
       const existingSubscription = await this.prisma.subscriptions.findFirst({
         where: {
           subscriber_id: subscription.subscriber_id,
           start_date: subscription.start_date,
+          amount: subscription.amount,
         },
       });
 
+      // Se não existir, insere o novo registro
       if (!existingSubscription) {
-        const insertedSubscription = await this.prisma.subscriptions.create({
-          data: subscription,
-        });
-        insertedSubscriptions.push(insertedSubscription);
+        await this.prisma.subscriptions.create({ data: subscription });
+        insertedCount++;
+      } else {
+        ignoredCount++;
       }
     }
 
-    return insertedSubscriptions;
+    return { inserted: insertedCount, ignored: ignoredCount };
   }
 
   private extractDataFromFile(file: Express.Multer.File): Subscription[] {
@@ -50,6 +54,21 @@ export class SubscriptionsService {
     });
 
     return rawData.map((item: any) => {
+      // Validação de campos obrigatórios e formatos
+      if (
+        !item.periodicidade ||
+        !item['ID assinante'] ||
+        isNaN(Number(item.valor))
+      ) {
+        throw new Error('Dados inválidos na planilha.');
+      }
+
+      // Validação de data
+      const startDate = new Date(item['data início']);
+      if (isNaN(startDate.getTime())) {
+        throw new Error('Formato de data inválido.');
+      }
+
       // Verifica se 'próximo ciclo' é uma data válida
       const nextCycleDate = item['próximo ciclo'];
       let validNextCycleDate;

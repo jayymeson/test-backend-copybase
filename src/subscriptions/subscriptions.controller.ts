@@ -35,9 +35,13 @@ export class SubscriptionsController {
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     const fileDto = new FileUploadDto();
     fileDto.file = file;
-    // Aqui você pode validar fileDto ou fazer algo com ele
-    const data = this.subscriptionsService.processUploadedFile(file);
-    return data;
+
+    const result = await this.subscriptionsService.processUploadedFile(file);
+    return {
+      message: 'Upload processado',
+      insertedRecords: result.inserted,
+      ignoredRecords: result.ignored,
+    };
   }
 
   @Delete('delete-all')
