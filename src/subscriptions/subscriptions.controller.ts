@@ -27,7 +27,7 @@ export class SubscriptionsController {
       properties: {
         file: {
           type: 'string',
-          format: '.xlsx or .csv',
+          format: '.xlsx',
         },
       },
     },
