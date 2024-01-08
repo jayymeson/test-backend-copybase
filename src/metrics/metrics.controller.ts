@@ -9,20 +9,19 @@ export class MetricsController {
   async getMRR(
     @Query('start') startString?: string,
     @Query('end') endString?: string,
-  ): Promise<{ mrr: number }> {
-    const mrr = await this.metricsService.calculateMRR(startString, endString);
-    return { mrr };
+  ): Promise<{ totalMRR: number; activeSubscriptions: number }> {
+    const { totalMRR, activeSubscriptions } =
+      await this.metricsService.calculateMRR(startString, endString);
+    return { totalMRR, activeSubscriptions };
   }
 
   @Get('churn-rate')
   async getChurnRate(
     @Query('start') startString?: string,
     @Query('end') endString?: string,
-  ): Promise<{ churnRate: number }> {
-    const churnRate = await this.metricsService.calculateChurnRate(
-      startString,
-      endString,
-    );
-    return { churnRate };
+  ): Promise<{ churnRate: number; cancellations: number }> {
+    const { churnRate, cancellations } =
+      await this.metricsService.calculateChurnRate(startString, endString);
+    return { churnRate, cancellations };
   }
 }
