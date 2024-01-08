@@ -12,7 +12,7 @@ export class MetricsService {
   async calculateMRR(
     startString?: string,
     endString?: string,
-  ): Promise<number> {
+  ): Promise<{ totalMRR: number; activeSubscriptions: number }> {
     const { startOfMonth, endOfMonth } = this.getPeriod(startString, endString);
 
     const subscriptions = await this.prisma.subscriptions.findMany({
@@ -22,16 +22,18 @@ export class MetricsService {
       },
     });
 
-    return subscriptions.reduce(
+    const totalMRR = subscriptions.reduce(
       (sum, subscription) => sum + subscription.amount,
       0,
     );
+
+    return { totalMRR, activeSubscriptions: subscriptions.length };
   }
 
   async calculateChurnRate(
     startString?: string,
     endString?: string,
-  ): Promise<number> {
+  ): Promise<{ churnRate: number; cancellations: number }> {
     const { startOfMonth, endOfMonth } = this.getPeriod(startString, endString);
 
     const activeAtStart = await this.prisma.subscriptions.count({
@@ -48,9 +50,10 @@ export class MetricsService {
       where: { cancellation_date: { gte: startOfMonth, lte: endOfMonth } },
     });
 
-    return activeAtStart === 0 ? 0 : cancellations / activeAtStart;
-  }
+    const churnRate = activeAtStart === 0 ? 0 : cancellations / activeAtStart;
 
+    return { churnRate, cancellations };
+  }
   private getPeriod(startString?: string, endString?: string) {
     let startOfMonth: Date;
     let endOfMonth: Date;
