@@ -61,20 +61,11 @@ export class SubscriptionsService {
         throw new Error('Dados inválidos na planilha.');
       }
 
-      // Validação de data
-      const startDate = new Date(item['data início']);
-      if (isNaN(startDate.getTime())) {
-        throw new Error('Formato de data inválido.');
-      }
-
-      // Verifica se 'próximo ciclo' é uma data válida
-      const nextCycleDate = item['próximo ciclo'];
-      let validNextCycleDate;
-      if (nextCycleDate && !isNaN(Date.parse(nextCycleDate))) {
-        validNextCycleDate = new Date(nextCycleDate);
-      } else {
-        validNextCycleDate = new Date();
-      }
+      // Validação e conversão de datas
+      const startDate = this.parseDate(item['data início']);
+      const statusDate = this.parseDate(item['data status']);
+      const cancellationDate = this.parseDate(item['data cancelamento']);
+      const nextCycleDate = this.parseDate(item['próximo ciclo']);
 
       return {
         id: item.id || undefined,
@@ -85,22 +76,34 @@ export class SubscriptionsService {
         charge_frequency_days: item['cobrada a cada X dias']
           ? Number(item['cobrada a cada X dias'])
           : 0,
-        start_date: item['data início']
-          ? new Date(item['data início'])
-          : new Date(),
+        start_date: startDate,
         status: item.status,
-        status_date: item['data status']
-          ? new Date(item['data status'])
-          : new Date(),
-        cancellation_date:
-          item['data cancelamento'] && item['data cancelamento'] !== '0'
-            ? new Date(item['data cancelamento'])
-            : null,
+        status_date: statusDate,
+        cancellation_date: cancellationDate,
         amount: item.valor ? Number(item.valor) : 0,
-        next_cycle_date: validNextCycleDate,
+        next_cycle_date: nextCycleDate,
         subscriber_id: item['ID assinante'],
       };
     });
+  }
+
+  private parseDate(dateString: string): Date | null {
+    if (!dateString) {
+      return null;
+    }
+
+    // Formato esperado: "DD/MM/YYYY HH:mm"
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      const year = parseInt(parts[2], 10) + 2000; // Ajuste para o ano
+      const month = parseInt(parts[0], 10) - 1; // Mês começa do zero
+      const day = parseInt(parts[1], 10);
+      return new Date(year, month, day);
+    }
+
+    // Tenta converter usando o formato 'yyyy-mm-dd'
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? null : date;
   }
 
   async deleteAllSubscriptions(): Promise<void> {
