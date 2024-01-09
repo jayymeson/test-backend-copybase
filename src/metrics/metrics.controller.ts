@@ -1,27 +1,29 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { MetricsService } from './metrics.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('metrics')
 @Controller('metrics')
 export class MetricsController {
   constructor(private readonly metricsService: MetricsService) {}
 
   @Get('mrr')
-  async getMRR(
-    @Query('start') startString?: string,
-    @Query('end') endString?: string,
-  ): Promise<{ totalMRR: number; activeSubscriptions: number }> {
-    const { totalMRR, activeSubscriptions } =
-      await this.metricsService.calculateMRR(startString, endString);
-    return { totalMRR, activeSubscriptions };
+  async getMRRForYear(
+    @Query('year') yearString?: string,
+  ): Promise<
+    Array<{ month: string; totalMRR: number; activeSubscriptions: number }>
+  > {
+    const year = yearString ? parseInt(yearString) : new Date().getFullYear();
+    return await this.metricsService.calculateMRRForYear(year);
   }
 
   @Get('churn-rate')
-  async getChurnRate(
-    @Query('start') startString?: string,
-    @Query('end') endString?: string,
-  ): Promise<{ churnRate: number; cancellations: number }> {
-    const { churnRate, cancellations } =
-      await this.metricsService.calculateChurnRate(startString, endString);
-    return { churnRate, cancellations };
+  async getChurnRateForYear(
+    @Query('year') yearString?: string,
+  ): Promise<
+    Array<{ month: string; churnRate: number; cancellations: number }>
+  > {
+    const year = yearString ? parseInt(yearString) : new Date().getFullYear();
+    return await this.metricsService.calculateChurnRateForYear(year);
   }
 }

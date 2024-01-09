@@ -9,11 +9,12 @@ export class MetricsService {
     private readonly subscriptions: SubscriptionsService,
   ) {}
 
-  async calculateMRR(
-    startString?: string,
-    endString?: string,
-  ): Promise<{ totalMRR: number; activeSubscriptions: number }> {
-    const { startOfMonth, endOfMonth } = this.getPeriod(startString, endString);
+  async calculateMRRForMonth(
+    month: number,
+    year: number,
+  ): Promise<{ month: string; totalMRR: number; activeSubscriptions: number }> {
+    const startOfMonth = new Date(year, month, 1);
+    const endOfMonth = new Date(year, month + 1, 0);
 
     const subscriptions = await this.prisma.subscriptions.findMany({
       where: {
@@ -27,14 +28,36 @@ export class MetricsService {
       0,
     );
 
-    return { totalMRR, activeSubscriptions: subscriptions.length };
+    const monthName = startOfMonth.toLocaleString('default', { month: 'long' });
+
+    return {
+      month: monthName,
+      totalMRR,
+      activeSubscriptions: subscriptions.length,
+    };
   }
 
-  async calculateChurnRate(
-    startString?: string,
-    endString?: string,
-  ): Promise<{ churnRate: number; cancellations: number }> {
-    const { startOfMonth, endOfMonth } = this.getPeriod(startString, endString);
+  async calculateMRRForYear(
+    year: number,
+  ): Promise<
+    Array<{ month: string; totalMRR: number; activeSubscriptions: number }>
+  > {
+    const results = [];
+
+    for (let month = 0; month < 12; month++) {
+      const result = await this.calculateMRRForMonth(month, year);
+      results.push(result);
+    }
+
+    return results;
+  }
+
+  async calculateChurnRateForMonth(
+    month: number,
+    year: number,
+  ): Promise<{ month: string; churnRate: number; cancellations: number }> {
+    const startOfMonth = new Date(year, month, 1);
+    const endOfMonth = new Date(year, month + 1, 0);
 
     const activeAtStart = await this.prisma.subscriptions.count({
       where: {
@@ -51,34 +74,23 @@ export class MetricsService {
     });
 
     const churnRate = activeAtStart === 0 ? 0 : cancellations / activeAtStart;
+    const monthName = startOfMonth.toLocaleString('default', { month: 'long' });
 
-    return { churnRate, cancellations };
+    return { month: monthName, churnRate, cancellations };
   }
-  private getPeriod(startString?: string, endString?: string) {
-    let startOfMonth: Date;
-    let endOfMonth: Date;
 
-    if (startString) {
-      const startYear = parseInt(startString.split('-')[0]);
-      const startMonth = parseInt(startString.split('-')[1]) - 1;
-      startOfMonth = new Date(startYear, startMonth, 1);
-    } else {
-      const now = new Date();
-      startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  async calculateChurnRateForYear(
+    year: number,
+  ): Promise<
+    Array<{ month: string; churnRate: number; cancellations: number }>
+  > {
+    const results = [];
+
+    for (let month = 0; month < 12; month++) {
+      const result = await this.calculateChurnRateForMonth(month, year);
+      results.push(result);
     }
 
-    if (endString) {
-      const endYear = parseInt(endString.split('-')[0]);
-      const endMonth = parseInt(endString.split('-')[1]);
-      endOfMonth = new Date(endYear, endMonth, 0);
-    } else {
-      endOfMonth = new Date(
-        startOfMonth.getFullYear(),
-        startOfMonth.getMonth() + 1,
-        0,
-      );
-    }
-
-    return { startOfMonth, endOfMonth };
+    return results;
   }
 }
