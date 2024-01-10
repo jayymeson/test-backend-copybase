@@ -93,4 +93,72 @@ export class MetricsService {
 
     return results;
   }
+
+  async calculateARPUForMonth(
+    month: number,
+    year: number,
+  ): Promise<{ month: string; ARPU: number }> {
+    const { totalMRR, activeSubscriptions } = await this.calculateMRRForMonth(
+      month,
+      year,
+    );
+
+    const ARPU = activeSubscriptions === 0 ? 0 : totalMRR / activeSubscriptions;
+    const monthName = new Date(year, month, 1).toLocaleString('default', {
+      month: 'long',
+    });
+
+    return {
+      month: monthName,
+      ARPU,
+    };
+  }
+
+  async calculateARPUForYear(
+    year: number,
+  ): Promise<Array<{ month: string; ARPU: number }>> {
+    const results = [];
+
+    for (let month = 0; month < 12; month++) {
+      const result = await this.calculateARPUForMonth(month, year);
+      results.push(result);
+    }
+
+    return results;
+  }
+
+  async calculateRevenueAndPurchasesPerCustomer(
+    year: number,
+  ): Promise<{ user: string; revenue: number; purchases: number }[]> {
+    const subscriptions = await this.prisma.subscriptions.findMany({
+      where: {
+        start_date: {
+          gte: new Date(year, 0, 1),
+          lte: new Date(year, 11, 31),
+        },
+      },
+      select: {
+        subscriber_id: true,
+        amount: true,
+      },
+    });
+
+    const customerData = subscriptions.reduce(
+      (acc, subscription) => {
+        if (!acc[subscription.subscriber_id]) {
+          acc[subscription.subscriber_id] = { revenue: 0, purchases: 0 };
+        }
+        acc[subscription.subscriber_id].revenue += subscription.amount;
+        acc[subscription.subscriber_id].purchases += 1;
+        return acc;
+      },
+      {} as Record<string, { revenue: number; purchases: number }>,
+    );
+
+    return Object.entries(customerData).map(([user, data]) => ({
+      user,
+      revenue: data.revenue,
+      purchases: data.purchases,
+    }));
+  }
 }
