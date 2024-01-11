@@ -155,10 +155,14 @@ export class MetricsService {
       {} as Record<string, { revenue: number; purchases: number }>,
     );
 
-    return Object.entries(customerData).map(([user, data]) => ({
-      user,
-      revenue: data.revenue,
-      purchases: data.purchases,
-    }));
+    const sortedCustomers = Object.entries(customerData)
+      .map(([user, data]) => ({
+        user,
+        revenue: data.revenue,
+        purchases: data.purchases,
+      }))
+      .sort((a, b) => b.revenue - a.revenue); // Ordena em ordem decrescente de receita
+
+    return sortedCustomers;
   }
 }
