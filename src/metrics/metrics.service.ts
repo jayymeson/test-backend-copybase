@@ -9,6 +9,13 @@ export class MetricsService {
     private readonly subscriptions: SubscriptionsService,
   ) {}
 
+  /**
+   * Calcula a Receita Mensal Recorrente (MRR) para um mês específico.
+   * @param {number} month - Mês para o cálculo.
+   * @param {number} year - Ano para o cálculo.
+   * @return {Promise<{ month: string; totalMRR: number; activeSubscriptions: number }>} MRR total e número de assinaturas ativas.
+   */
+
   async calculateMRRForMonth(
     month: number,
     year: number,
@@ -37,6 +44,11 @@ export class MetricsService {
     };
   }
 
+  /**
+   * Calcula a Receita Mensal Recorrente (MRR) para um ano inteiro.
+   * @param {number} year - Ano para o cálculo.
+   * @return {Promise<Array<{ month: string; totalMRR: number; activeSubscriptions: number }>>} MRR total por mês e número de assinaturas ativas.
+   */
   async calculateMRRForYear(
     year: number,
   ): Promise<
@@ -52,6 +64,12 @@ export class MetricsService {
     return results;
   }
 
+  /**
+   * Calcula a taxa de churn (cancelamento) para um mês específico.
+   * @param {number} month - Mês para o cálculo.
+   * @param {number} year - Ano para o cálculo.
+   * @return {Promise<{ month: string; churnRate: number; cancellations: number }>} Taxa de churn e número de cancelamentos.
+   */
   async calculateChurnRateForMonth(
     month: number,
     year: number,
@@ -79,6 +97,11 @@ export class MetricsService {
     return { month: monthName, churnRate, cancellations };
   }
 
+  /**
+   * Calcula a taxa de churn para um ano inteiro, mês a mês.
+   * @param {number} year - Ano para o cálculo.
+   * @return {Promise<Array<{ month: string; churnRate: number; cancellations: number }>>} Taxa de churn por mês e número de cancelamentos.
+   */
   async calculateChurnRateForYear(
     year: number,
   ): Promise<
@@ -94,6 +117,12 @@ export class MetricsService {
     return results;
   }
 
+  /**
+   * Calcula a Receita Média Por Usuário (ARPU) para um mês específico.
+   * @param {number} month - Mês para o cálculo.
+   * @param {number} year - Ano para o cálculo.
+   * @return {Promise<{ month: string; ARPU: number }>} ARPU do mês.
+   */
   async calculateARPUForMonth(
     month: number,
     year: number,
@@ -114,6 +143,11 @@ export class MetricsService {
     };
   }
 
+  /**
+   * Calcula a Receita Média Por Usuário (ARPU) para um ano inteiro, mês a mês.
+   * @param {number} year - Ano para o cálculo.
+   * @return {Promise<Array<{ month: string; ARPU: number }>>} ARPU por mês.
+   */
   async calculateARPUForYear(
     year: number,
   ): Promise<Array<{ month: string; ARPU: number }>> {
@@ -127,6 +161,11 @@ export class MetricsService {
     return results;
   }
 
+  /**
+   * Calcula a receita e o número de compras por cliente em um ano específico.
+   * @param {number} year - Ano para o cálculo.
+   * @return {Promise<{ user: string; revenue: number; purchases: number }[]>} Receita e número de compras por cliente.
+   */
   async calculateRevenueAndPurchasesPerCustomer(
     year: number,
   ): Promise<{ user: string; revenue: number; purchases: number }[]> {

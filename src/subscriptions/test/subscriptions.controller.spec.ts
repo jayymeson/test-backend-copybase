@@ -1,24 +1,28 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubscriptionsController } from '../subscriptions.controller';
 import { SubscriptionsService } from '../subscriptions.service';
-// import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '../../auth/auth.guard';
+import { JwtModule } from '@nestjs/jwt';
 
 describe('SubscriptionsController', () => {
   let controller: SubscriptionsController;
   let service: SubscriptionsService;
 
+  const mockSubscriptionsService = {
+    processUploadedFile: jest
+      .fn()
+      .mockResolvedValue({ inserted: 1, ignored: 0 }),
+  };
+
+  const mockAuthGuard = { canActivate: jest.fn(() => true) };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [JwtModule],
       controllers: [SubscriptionsController],
       providers: [
-        {
-          provide: SubscriptionsService,
-          useValue: {
-            processUploadedFile: jest
-              .fn()
-              .mockResolvedValue({ inserted: 1, ignored: 0 }),
-          },
-        },
+        { provide: SubscriptionsService, useValue: mockSubscriptionsService },
+        { provide: AuthGuard, useValue: mockAuthGuard },
       ],
     }).compile();
 

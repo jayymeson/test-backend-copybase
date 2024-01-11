@@ -7,6 +7,11 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SubscriptionsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Processa um arquivo enviado e insere assinaturas no banco de dados.
+   * @param {Express.Multer.File} file - Arquivo de assinaturas enviado.
+   * @return {Promise<{ inserted: number; ignored: number }>} O número de assinaturas inseridas e ignoradas.
+   */
   async processUploadedFile(
     file: Express.Multer.File,
   ): Promise<{ inserted: number; ignored: number }> {
@@ -16,6 +21,11 @@ export class SubscriptionsService {
     return this.insertSubscriptions(data);
   }
 
+  /**
+   * Insere um conjunto de assinaturas no banco de dados.
+   * @param {Subscription[]} subscriptions - Assinaturas a serem inseridas.
+   * @return {Promise<{ inserted: number; ignored: number }>} O número de assinaturas inseridas e ignoradas.
+   */
   private async insertSubscriptions(
     subscriptions: Subscription[],
   ): Promise<{ inserted: number; ignored: number }> {
@@ -42,6 +52,11 @@ export class SubscriptionsService {
     return { inserted: insertedCount, ignored: ignoredCount };
   }
 
+  /**
+   * Extrai dados de assinaturas de um arquivo Excel.
+   * @param {Express.Multer.File} file - Arquivo Excel com os dados das assinaturas.
+   * @return {Subscription[]} Um array de objetos de assinatura.
+   */
   private extractDataFromFile(file: Express.Multer.File): Subscription[] {
     const workbook = XLSX.readFile(file.path);
     const sheetName = workbook.SheetNames[0];
@@ -87,6 +102,11 @@ export class SubscriptionsService {
     });
   }
 
+  /**
+   * Converte uma string de data para um objeto Date.
+   * @param {string} dateString - Data em formato de string.
+   * @return {Date | null} Objeto Date ou null se a string for inválida.
+   */
   private parseDate(dateString: string): Date | null {
     if (!dateString) {
       return null;
