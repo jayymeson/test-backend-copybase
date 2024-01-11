@@ -6,17 +6,20 @@ import {
   UsePipes,
   ValidationPipe,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SubscriptionsService } from './subscriptions.service';
 import { FileUploadDto } from './models/dto/subscription-dto';
 import { ApiConsumes, ApiBody, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '../auth/auth.guard';
 
 @ApiTags('uploads')
 @Controller('subscription')
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
+  @UseGuards(AuthGuard)
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   @UsePipes(new ValidationPipe())
