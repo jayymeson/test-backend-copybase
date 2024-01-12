@@ -14,6 +14,9 @@ export class MetricsController {
     Array<{ month: string; totalMRR: number; activeSubscriptions: number }>
   > {
     const year = yearString ? parseInt(yearString) : new Date().getFullYear();
+    if (isNaN(year)) {
+      return [];
+    }
     return await this.metricsService.calculateMRRForYear(year);
   }
 
@@ -24,25 +27,33 @@ export class MetricsController {
     Array<{ month: string; churnRate: number; cancellations: number }>
   > {
     const year = yearString ? parseInt(yearString) : new Date().getFullYear();
+    if (isNaN(year)) {
+      return [];
+    }
     return await this.metricsService.calculateChurnRateForYear(year);
   }
 
   @Get('arpu')
   async getARPU(
-    @Query('year') yearString: string,
+    @Query('year') yearString?: string,
   ): Promise<Array<{ month: string; ARPU: number }>> {
-    const year = parseInt(yearString, 10);
+    const year = yearString ? parseInt(yearString) : new Date().getFullYear();
     if (isNaN(year)) {
-      throw new Error('Ano inválido fornecido');
+      return [];
     }
-
-    return this.metricsService.calculateARPUForYear(year);
+    return await this.metricsService.calculateARPUForYear(year);
   }
 
   @Get('revenue-per-customer')
   async getCustomerData(
-    @Query('year') year: number,
+    @Query('year') yearString?: string,
   ): Promise<{ user: string; revenue: number; purchases: number }[]> {
-    return this.metricsService.calculateRevenueAndPurchasesPerCustomer(year);
+    const year = yearString ? parseInt(yearString) : new Date().getFullYear();
+    if (isNaN(year)) {
+      return [];
+    }
+    return await this.metricsService.calculateRevenueAndPurchasesPerCustomer(
+      year,
+    );
   }
 }

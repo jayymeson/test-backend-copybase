@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { SubscriptionData } from './models/interface/subscription-interface';
 
 @Injectable()
 export class MetricsService {
@@ -23,14 +24,15 @@ export class MetricsService {
     const startOfMonth = new Date(year, month, 1);
     const endOfMonth = new Date(year, month + 1, 0);
 
-    const subscriptions = await this.prisma.subscriptions.findMany({
-      where: {
-        start_date: { gte: startOfMonth, lte: endOfMonth },
-        status: 'Ativa',
-      },
-    });
+    const subscriptions: SubscriptionData[] =
+      await this.prisma.subscriptions.findMany({
+        where: {
+          start_date: { gte: startOfMonth, lte: endOfMonth },
+          status: 'Ativa',
+        },
+      });
 
-    const totalMRR = subscriptions.reduce(
+    const totalMRR = subscriptions.reduce<number>(
       (sum, subscription) => sum + subscription.amount,
       0,
     );
@@ -169,20 +171,22 @@ export class MetricsService {
   async calculateRevenueAndPurchasesPerCustomer(
     year: number,
   ): Promise<{ user: string; revenue: number; purchases: number }[]> {
-    const subscriptions = await this.prisma.subscriptions.findMany({
-      where: {
-        start_date: {
-          gte: new Date(year, 0, 1),
-          lte: new Date(year, 11, 31),
+    const subscriptions: SubscriptionData[] =
+      await this.prisma.subscriptions.findMany({
+        where: {
+          start_date: {
+            gte: new Date(year, 0, 1),
+            lte: new Date(year, 11, 31),
+          },
         },
-      },
-      select: {
-        subscriber_id: true,
-        amount: true,
-      },
-    });
+        select: {
+          subscriber_id: true,
+          amount: true,
+        },
+      });
 
-    const customerData = subscriptions.reduce(
+    type CustomerData = Record<string, { revenue: number; purchases: number }>;
+    const customerData = subscriptions.reduce<CustomerData>(
       (acc, subscription) => {
         if (!acc[subscription.subscriber_id]) {
           acc[subscription.subscriber_id] = { revenue: 0, purchases: 0 };
@@ -191,7 +195,7 @@ export class MetricsService {
         acc[subscription.subscriber_id].purchases += 1;
         return acc;
       },
-      {} as Record<string, { revenue: number; purchases: number }>,
+      {} as CustomerData,
     );
 
     const sortedCustomers = Object.entries(customerData)
@@ -200,7 +204,7 @@ export class MetricsService {
         revenue: data.revenue,
         purchases: data.purchases,
       }))
-      .sort((a, b) => b.revenue - a.revenue); // Ordena em ordem decrescente de receita
+      .sort((a, b) => b.revenue - a.revenue);
 
     return sortedCustomers;
   }
